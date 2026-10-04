@@ -1,0 +1,167 @@
+@model IEnumerable<PEWS.Models.EmergencyContact>
+@using PEWS.Models.Enums
+@{
+    ViewData["Title"] = "Emergency Contacts";
+    ViewData["PageTitle"] = "Emergency Contacts";
+    ViewData["ActivePage"] = "Contacts";
+    if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+    {
+        ViewData["PageActions"] = "<a href=\"/EmergencyContacts/Create\" class=\"btn btn-pews-primary\"><i class=\"fas fa-plus me-2\"></i>Add Contact</a>";
+    }
+}
+
+<!-- Quick Access Bar -->
+<div class="row g-3 mb-4">
+    @{
+        var typeGroups = new[] {
+            (ContactType.Police, "fas fa-shield-halved", "bg-primary", "Police"),
+            (ContactType.Hospital, "fas fa-hospital", "bg-danger", "Hospitals"),
+            (ContactType.Ambulance, "fas fa-truck-medical", "bg-warning", "Ambulance"),
+            (ContactType.FireDepartment, "fas fa-fire-extinguisher", "bg-orange", "Fire"),
+            (ContactType.DisasterResponse, "fas fa-people-carry-box", "bg-success", "Disaster"),
+            (ContactType.RedCross, "fas fa-hand-holding-heart", "bg-info", "Red Cross"),
+        };
+    }
+    @foreach (var (ct, icon, bg, label) in typeGroups)
+    {
+        var count = Model.Count(c => c.ContactType == ct);
+        <div class="col-6 col-md-2">
+            <a href="?type=@((int)ct)" class="pews-card text-center py-3 d-block text-decoration-none @(ViewBag.Type?.ToString() == ((int)ct).ToString() ? "border border-primary" : "")">
+                <i class="@icon fs-3 mb-1 text-primary d-block"></i>
+                <div class="fw-bold">@count</div>
+                <div class="text-muted small">@label</div>
+            </a>
+        </div>
+    }
+</div>
+
+<!-- Filter -->
+<form method="get" class="pews-card mb-4">
+    <div class="card-body">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <input type="text" name="search" class="form-control" value="@ViewBag.Search" placeholder="Search by name or phone..." />
+            </div>
+            <div class="col-md-3">
+                <select name="type" class="form-select">
+                    <option value="">All Types</option>
+                    @foreach (ContactType ct in Enum.GetValues(typeof(ContactType)))
+                    {
+                        <option value="@((int)ct)" selected="@(ViewBag.Type?.ToString() == ((int)ct).ToString())">@ct</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="regionId" class="form-select">
+                    <option value="">All Regions</option>
+                    @foreach (var r in (IEnumerable<PEWS.Models.Region>)ViewBag.Regions)
+                    {
+                        <option value="@r.Id" selected="@(ViewBag.RegionId?.ToString() == r.Id.ToString())">@r.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-pews-primary flex-grow-1"><i class="fas fa-search"></i></button>
+                <a href="/EmergencyContacts" class="btn btn-outline-secondary"><i class="fas fa-rotate-left"></i></a>
+            </div>
+        </div>
+    </div>
+</form>
+
+<div class="row g-4">
+    @if (Model.Any())
+    {
+        @foreach (var contact in Model)
+        {
+            var (icon, bg) = contact.ContactType switch {
+                ContactType.Police => ("fas fa-shield-halved", "#0d6efd"),
+                ContactType.Hospital => ("fas fa-hospital", "#dc3545"),
+                ContactType.Ambulance => ("fas fa-truck-medical", "#fd7e14"),
+                ContactType.FireDepartment => ("fas fa-fire-extinguisher", "#d63031"),
+                ContactType.DisasterResponse => ("fas fa-people-carry-box", "#00b894"),
+                ContactType.RedCross => ("fas fa-hand-holding-heart", "#e00"),
+                _ => ("fas fa-building-user", "#6c757d")
+            };
+            <div class="col-md-6 col-lg-4">
+                <div class="pews-card h-100">
+                    <div class="card-body">
+                        <div class="d-flex gap-3 mb-3">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                                 style="width:48px;height:48px;background:@bg + '22';color:@bg">
+                                <i class="@icon"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-0">@contact.Name</h6>
+                                <span class="badge" style="background:@bg + '22';color:@bg">@contact.ContactType</span>
+                                @if (contact.IsAvailable24Hours)
+                                {
+                                    <span class="badge bg-success ms-1">24/7</span>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="mb-2">
+                            <a href="tel:@contact.PhoneNumber" class="btn btn-outline-success w-100 fw-semibold">
+                                <i class="fas fa-phone me-2"></i>@contact.PhoneNumber
+                            </a>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(contact.AlternativePhone))
+                        {
+                            <div class="mb-2">
+                                <a href="tel:@contact.AlternativePhone" class="btn btn-outline-secondary w-100 btn-sm">
+                                    <i class="fas fa-phone me-2"></i>@contact.AlternativePhone (Alt)
+                                </a>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(contact.Email))
+                        {
+                            <div class="text-muted small mb-1">
+                                <i class="fas fa-envelope me-2"></i>@contact.Email
+                            </div>
+                        }
+
+                        @if (contact.Region != null)
+                        {
+                            <div class="text-muted small mb-1">
+                                <i class="fas fa-location-dot me-2"></i>@contact.Region.Name
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(contact.OperatingHours))
+                        {
+                            <div class="text-muted small">
+                                <i class="fas fa-clock me-2"></i>@contact.OperatingHours
+                            </div>
+                        }
+
+                        @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+                        {
+                            <div class="d-flex gap-2 mt-3 pt-3 border-top">
+                                <a asp-action="Edit" asp-route-id="@contact.Id" class="btn btn-sm btn-outline-secondary flex-grow-1">
+                                    <i class="fas fa-pen me-1"></i>Edit
+                                </a>
+                                <form asp-action="Delete" asp-route-id="@contact.Id" method="post" class="flex-grow-1">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-outline-danger w-100"
+                                            data-confirm="Delete this contact?">
+                                        <i class="fas fa-trash me-1"></i>Delete
+                                    </button>
+                                </form>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="col-12">
+            <div class="text-center py-5 text-muted">
+                <i class="fas fa-phone-slash fs-2 opacity-25 d-block mb-3"></i>No emergency contacts found.
+            </div>
+        </div>
+    }
+</div>

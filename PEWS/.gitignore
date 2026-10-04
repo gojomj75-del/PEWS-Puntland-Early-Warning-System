@@ -1,0 +1,41 @@
+## .NET Core
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+bin/
+obj/
+out/
+publish/
+
+## ASP.NET Core
+wwwroot/uploads/
+appsettings.Development.json
+app.db
+*.db
+
+## EF Migrations (keep)
+# Data/Migrations/ — tracked intentionally
+
+## Environment / Secrets
+.env
+secrets.json
+*.pfx
+*.p12
+
+## Visual Studio
+.vscode/
+*.swp
+*.swo
+~$*
+
+## OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+## NuGet
+*.nupkg
+.nuget/
+packages/

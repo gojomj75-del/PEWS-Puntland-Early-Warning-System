@@ -1,0 +1,101 @@
+@model PEWS.ViewModels.EmergencyContactViewModel
+@using PEWS.Models.Enums
+@{
+    ViewData["Title"] = "Add Emergency Contact";
+    ViewData["PageTitle"] = "Add Emergency Contact";
+    ViewData["ActivePage"] = "Contacts";
+    ViewData["Breadcrumb"] = "<li class=\"breadcrumb-item\"><a href=\"/EmergencyContacts\">Contacts</a></li><li class=\"breadcrumb-item active\">Add</li>";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="pews-card">
+            <div class="card-header"><i class="fas fa-plus me-2 text-primary"></i>New Emergency Contact</div>
+            <div class="card-body">
+                <form asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 mb-3"></div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-8">
+                            <label asp-for="Name" class="form-label">Name <span class="text-danger">*</span></label>
+                            <input asp-for="Name" class="form-control" placeholder="e.g., Garowe General Hospital" />
+                            <span asp-validation-for="Name" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="ContactType" class="form-label">Type</label>
+                            <select asp-for="ContactType" class="form-select">
+                                @foreach (ContactType ct in Enum.GetValues(typeof(ContactType)))
+                                {
+                                    <option value="@((int)ct)">@ct</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="PhoneNumber" class="form-label">Phone Number <span class="text-danger">*</span></label>
+                            <input asp-for="PhoneNumber" class="form-control" placeholder="+252 61 xxxxxxx" />
+                            <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="AlternativePhone" class="form-label">Alternative Phone</label>
+                            <input asp-for="AlternativePhone" class="form-control" placeholder="Optional" />
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="Email" class="form-label">Email</label>
+                            <input asp-for="Email" type="email" class="form-control" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="RegionId" class="form-label">Region</label>
+                            <select asp-for="RegionId" asp-items="Model.Regions" class="form-select">
+                                <option value="">— All Regions —</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Address" class="form-label">Address</label>
+                        <input asp-for="Address" class="form-control" />
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="OperatingHours" class="form-label">Operating Hours</label>
+                            <input asp-for="OperatingHours" class="form-control" placeholder="e.g., 24/7 or Mon-Fri 8:00-17:00" />
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end pb-1">
+                            <div class="form-check">
+                                <input asp-for="IsAvailable24Hours" class="form-check-input" type="checkbox" />
+                                <label asp-for="IsAvailable24Hours" class="form-check-label">Available 24/7</label>
+                            </div>
+                            <div class="form-check ms-4">
+                                <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                                <label asp-for="IsActive" class="form-check-label">Active</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Notes" class="form-label">Notes</label>
+                        <textarea asp-for="Notes" class="form-control" rows="2"></textarea>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-pews-primary">
+                            <i class="fas fa-floppy-disk me-2"></i>Save Contact
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

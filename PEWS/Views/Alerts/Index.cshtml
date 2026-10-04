@@ -1,0 +1,170 @@
+@model IEnumerable<PEWS.Models.Alert>
+@using PEWS.Models.Enums
+@{
+    ViewData["Title"] = "Alerts";
+    ViewData["PageTitle"] = "Disaster Alerts";
+    ViewData["ActivePage"] = "Alerts";
+    if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("EmergencyOfficer"))
+    {
+        ViewData["PageActions"] = "<a href=\"/Alerts/Create\" class=\"btn btn-pews-primary\"><i class=\"fas fa-plus me-2\"></i>Create Alert</a>";
+    }
+}
+
+<!-- Filter Bar -->
+<form method="get" class="pews-card mb-4">
+    <div class="card-body">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small fw-semibold">Search</label>
+                <input type="text" name="search" class="form-control" value="@ViewBag.Search" placeholder="Alert title or message..." />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All</option>
+                    @foreach (AlertStatus st in Enum.GetValues(typeof(AlertStatus)))
+                    {
+                        <option value="@((int)st)" selected="@(ViewBag.Status?.ToString() == ((int)st).ToString())">@st</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">Severity</label>
+                <select name="severity" class="form-select">
+                    <option value="">All</option>
+                    @foreach (SeverityLevel sv in Enum.GetValues(typeof(SeverityLevel)))
+                    {
+                        <option value="@((int)sv)" selected="@(ViewBag.Severity?.ToString() == ((int)sv).ToString())">@sv</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">Category</label>
+                <select name="categoryId" class="form-select">
+                    <option value="">All</option>
+                    @foreach (var c in (IEnumerable<PEWS.Models.AlertCategory>)ViewBag.Categories)
+                    {
+                        <option value="@c.Id" selected="@(ViewBag.CategoryId?.ToString() == c.Id.ToString())">@c.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-pews-primary w-100"><i class="fas fa-search me-1"></i>Filter</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<div class="pews-card">
+    <div class="card-header">
+        <span><i class="fas fa-triangle-exclamation me-2 text-warning"></i>Alerts <span class="badge bg-secondary">@ViewBag.TotalCount</span></span>
+    </div>
+    <div class="card-body p-0">
+        @if (Model.Any())
+        {
+            <div class="table-responsive">
+                <table class="table pews-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Category</th>
+                            <th>Severity</th>
+                            <th>Status</th>
+                            <th>Region</th>
+                            <th>Published</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var alert in Model)
+                        {
+                            var sevClass = alert.Severity switch {
+                                SeverityLevel.Low => "badge-severity-low",
+                                SeverityLevel.Medium => "badge-severity-medium",
+                                SeverityLevel.High => "badge-severity-high",
+                                _ => "badge-severity-critical"
+                            };
+                            var stClass = alert.Status switch {
+                                AlertStatus.Draft => "badge-status-draft",
+                                AlertStatus.Published => "badge-status-published",
+                                _ => "badge-status-expired"
+                            };
+                            <tr>
+                                <td>
+                                    <a asp-action="Details" asp-route-id="@alert.Id" class="fw-semibold text-decoration-none text-dark">
+                                        @alert.Title
+                                    </a>
+                                </td>
+                                <td>
+                                    <span style="color:@alert.AlertCategory.Color">
+                                        <i class="@alert.AlertCategory.IconClass me-1"></i>@alert.AlertCategory.Name
+                                    </span>
+                                </td>
+                                <td><span class="badge @sevClass">@alert.Severity</span></td>
+                                <td><span class="badge @stClass">@alert.Status</span></td>
+                                <td class="text-muted">@(alert.Region?.Name ?? "All Regions")</td>
+                                <td class="text-muted small">
+                                    @(alert.PublishedAt.HasValue ? alert.PublishedAt.Value.ToString("dd MMM yyyy") : "Not published")
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        <a asp-action="Details" asp-route-id="@alert.Id" class="btn btn-sm btn-outline-primary" title="View">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("EmergencyOfficer"))
+                                        {
+                                            if (!alert.IsPublished)
+                                            {
+                                                <form asp-action="Publish" asp-route-id="@alert.Id" method="post" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-success" title="Publish"
+                                                            data-confirm="Publish this alert? All users will be notified.">
+                                                        <i class="fas fa-broadcast-tower"></i>
+                                                    </button>
+                                                </form>
+                                            }
+                                            <a asp-action="Edit" asp-route-id="@alert.Id" class="btn btn-sm btn-outline-secondary" title="Edit">
+                                                <i class="fas fa-pen"></i>
+                                            </a>
+                                        }
+                                        @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+                                        {
+                                            <form asp-action="Delete" asp-route-id="@alert.Id" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"
+                                                        data-confirm="Delete this alert?">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if ((int)ViewBag.TotalPages > 1)
+            {
+                <div class="d-flex justify-content-center gap-2 py-3">
+                    @for (int p = 1; p <= (int)ViewBag.TotalPages; p++)
+                    {
+                        <a href="?page=@p&search=@ViewBag.Search&status=@ViewBag.Status&severity=@ViewBag.Severity&categoryId=@ViewBag.CategoryId"
+                           class="btn btn-sm @(p == (int)ViewBag.Page ? "btn-pews-primary" : "btn-outline-secondary")">@p</a>
+                    }
+                </div>
+            }
+        }
+        else
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="fas fa-bell-slash fs-2 mb-3 d-block opacity-25"></i>No alerts found.
+                @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("EmergencyOfficer"))
+                {
+                    <br /><a asp-action="Create" class="btn btn-pews-primary mt-3">Create First Alert</a>
+                }
+            </div>
+        }
+    </div>
+</div>

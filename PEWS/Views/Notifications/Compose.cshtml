@@ -1,0 +1,54 @@
+@model PEWS.ViewModels.ComposeNotificationViewModel
+@using PEWS.Models.Enums
+@{
+    ViewData["Title"] = "Compose Notification";
+    ViewData["PageTitle"] = "Compose Notification";
+    ViewData["ActivePage"] = "Notifications";
+    ViewData["Breadcrumb"] = "<li class=\"breadcrumb-item\"><a href=\"/Notifications\">Notifications</a></li><li class=\"breadcrumb-item active\">Compose</li>";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="pews-card">
+            <div class="card-header"><i class="fas fa-paper-plane me-2 text-primary"></i>Broadcast a Notification</div>
+            <div class="card-body">
+                <p class="text-muted small">This will be sent immediately to every active user's notification inbox on both the web portal and the mobile app.</p>
+                <form asp-action="Compose" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Title" class="form-label">Title <span class="text-danger">*</span></label>
+                        <input asp-for="Title" class="form-control" placeholder="e.g. Heavy Rains Expected This Weekend" />
+                        <span asp-validation-for="Title" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Message" class="form-label">Message <span class="text-danger">*</span></label>
+                        <textarea asp-for="Message" class="form-control" rows="4" placeholder="Write the notification message..."></textarea>
+                        <span asp-validation-for="Message" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Type" class="form-label">Notification Type</label>
+                        <select asp-for="Type" class="form-select">
+                            @foreach (NotificationType t in Enum.GetValues(typeof(NotificationType)))
+                            {
+                                <option value="@((int)t)">@t</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-pews-primary" data-confirm="Send this notification to all active users?">
+                            <i class="fas fa-paper-plane me-2"></i>Send to All Users
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

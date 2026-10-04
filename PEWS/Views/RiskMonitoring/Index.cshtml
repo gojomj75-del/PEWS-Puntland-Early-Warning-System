@@ -1,0 +1,105 @@
+@model IEnumerable<PEWS.Models.Region>
+@using PEWS.Models.Enums
+@{
+    ViewData["Title"] = "Risk Monitoring";
+    ViewData["PageTitle"] = "Risk Monitoring";
+    ViewData["ActivePage"] = "Risk";
+}
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card border-success">
+            <div class="stat-icon bg-success-soft"><i class="fas fa-circle-check"></i></div>
+            <div class="stat-value">@Model.Count(r => r.RiskLevel == RiskLevel.Low)</div>
+            <div class="stat-label">Low Risk Regions</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card border-warning">
+            <div class="stat-icon bg-warning-soft"><i class="fas fa-triangle-exclamation"></i></div>
+            <div class="stat-value">@Model.Count(r => r.RiskLevel == RiskLevel.Medium)</div>
+            <div class="stat-label">Medium Risk</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card border-danger">
+            <div class="stat-icon bg-danger-soft"><i class="fas fa-fire"></i></div>
+            <div class="stat-value">@Model.Count(r => r.RiskLevel == RiskLevel.High)</div>
+            <div class="stat-label">High Risk</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card border-danger">
+            <div class="stat-icon bg-danger-soft"><i class="fas fa-skull-crossbones"></i></div>
+            <div class="stat-value">@Model.Count(r => r.RiskLevel == RiskLevel.Critical)</div>
+            <div class="stat-label">Critical Risk</div>
+        </div>
+    </div>
+</div>
+
+<div class="pews-card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="fas fa-map-location-dot me-2 text-primary"></i>Puntland Risk Map — Regions Overview</span>
+        @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+        {
+            <a asp-action="CreateRegion" class="btn btn-sm btn-pews-primary"><i class="fas fa-plus me-1"></i>Add Region</a>
+        }
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table pews-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Region</th>
+                        <th>Code</th>
+                        <th>Risk Level</th>
+                        <th>Districts</th>
+                        <th>Citizen Reports</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var region in Model)
+                    {
+                        var riskClass = region.RiskLevel switch {
+                            RiskLevel.Low => "risk-low",
+                            RiskLevel.Medium => "risk-medium",
+                            RiskLevel.High => "risk-high",
+                            _ => "risk-critical"
+                        };
+                        var icon = region.RiskLevel switch {
+                            RiskLevel.Low => "fas fa-circle-check",
+                            RiskLevel.Medium => "fas fa-triangle-exclamation",
+                            RiskLevel.High => "fas fa-fire",
+                            _ => "fas fa-skull-crossbones"
+                        };
+                        <tr>
+                            <td class="fw-semibold">@region.Name</td>
+                            <td><span class="badge bg-light text-dark border">@region.Code</span></td>
+                            <td>
+                                <span class="badge @riskClass px-3 py-1">
+                                    <i class="@icon me-1"></i>@region.RiskLevel
+                                </span>
+                            </td>
+                            <td>@region.Districts.Count(d => d.IsActive)</td>
+                            <td>@region.UserReports.Count</td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <a asp-action="RegionDetails" asp-route-id="@region.Id" class="btn btn-sm btn-outline-primary" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+                                    {
+                                        <a asp-action="EditRegion" asp-route-id="@region.Id" class="btn btn-sm btn-outline-secondary" title="Edit">
+                                            <i class="fas fa-pen"></i>
+                                        </a>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

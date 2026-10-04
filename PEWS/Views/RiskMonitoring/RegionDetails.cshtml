@@ -1,0 +1,192 @@
+@model PEWS.Models.Region
+@using PEWS.Models.Enums
+@{
+    ViewData["Title"] = Model.Name + " Risk Details";
+    ViewData["PageTitle"] = Model.Name + " — Risk Details";
+    ViewData["ActivePage"] = "Risk";
+    ViewData["Breadcrumb"] = "<li class=\"breadcrumb-item\"><a href=\"/RiskMonitoring\">Risk Monitoring</a></li><li class=\"breadcrumb-item active\">" + Model.Name + "</li>";
+
+    var riskClass = Model.RiskLevel switch {
+        RiskLevel.Low => "risk-low",
+        RiskLevel.Medium => "risk-medium",
+        RiskLevel.High => "risk-high",
+        _ => "risk-critical"
+    };
+}
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <!-- Districts -->
+        <div class="pews-card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-map me-2 text-primary"></i>Districts in @Model.Name</span>
+                @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+                {
+                    <a asp-action="CreateDistrict" asp-route-regionId="@Model.Id" class="btn btn-sm btn-pews-primary"><i class="fas fa-plus me-1"></i>Add District</a>
+                }
+            </div>
+            <div class="card-body p-0">
+                <table class="table pews-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>District</th>
+                            <th>Population</th>
+                            <th>Risk Level</th>
+                            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+                            {
+                                <th>Update Risk</th>
+                                <th>Actions</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var district in Model.Districts.Where(d => d.IsActive))
+                        {
+                            var dRisk = district.RiskLevel switch {
+                                RiskLevel.Low => "risk-low",
+                                RiskLevel.Medium => "risk-medium",
+                                RiskLevel.High => "risk-high",
+                                _ => "risk-critical"
+                            };
+                            <tr>
+                                <td class="fw-semibold">@district.Name</td>
+                                <td>@(district.Population.HasValue ? district.Population.Value.ToString("N0") : "N/A")</td>
+                                <td><span class="badge @dRisk">@district.RiskLevel</span></td>
+                                @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+                                {
+                                    <td>
+                                        <form asp-action="UpdateDistrictRisk" asp-route-id="@district.Id" method="post" class="d-flex gap-2">
+                                            @Html.AntiForgeryToken()
+                                            <select name="riskLevel" class="form-select form-select-sm" style="width:110px;">
+                                                @foreach (RiskLevel rl in Enum.GetValues(typeof(RiskLevel)))
+                                                {
+                                                    <option value="@((int)rl)" selected="@(rl == district.RiskLevel)">@rl</option>
+                                                }
+                                            </select>
+                                            <button type="submit" class="btn btn-sm btn-outline-primary">Update</button>
+                                        </form>
+                                    </td>
+                                    <td>
+                                        <a asp-action="EditDistrict" asp-route-id="@district.Id" class="btn btn-sm btn-outline-secondary" title="Edit">
+                                            <i class="fas fa-pen"></i>
+                                        </a>
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Recent Reports -->
+        <div class="pews-card">
+            <div class="card-header"><i class="fas fa-mobile-screen-button me-2 text-danger"></i>Recent Citizen Reports in @Model.Name</div>
+            <div class="card-body p-0">
+                @if (Model.UserReports.Any())
+                {
+                    <table class="table pews-table mb-0">
+                        <thead>
+                            <tr><th>Title</th><th>Type</th><th>Severity</th><th>Date</th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var r in Model.UserReports)
+                            {
+                                var sev = r.Severity switch {
+                                    SeverityLevel.Low => "badge-severity-low",
+                                    SeverityLevel.Medium => "badge-severity-medium",
+                                    SeverityLevel.High => "badge-severity-high",
+                                    _ => "badge-severity-critical"
+                                };
+                                <tr>
+                                    <td><a asp-controller="UserReports" asp-action="Details" asp-route-id="@r.Id" class="text-decoration-none">@r.Title</a></td>
+                                    <td><i class="@r.DisasterType?.IconClass me-1" style="color:@r.DisasterType?.Color"></i>@r.DisasterType?.Name</td>
+                                    <td><span class="badge @sev">@r.Severity</span></td>
+                                    <td class="text-muted small">@r.CreatedAt.ToString("dd MMM yyyy")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="text-center py-4 text-muted"><i class="fas fa-folder-open opacity-25 fs-2 d-block mb-2"></i>No recent reports.</div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="pews-card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-shield-halved me-2 text-primary"></i>Region Risk Level</span>
+                @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+                {
+                    <a asp-action="EditRegion" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-secondary" title="Edit Region">
+                        <i class="fas fa-pen"></i>
+                    </a>
+                }
+            </div>
+            <div class="card-body text-center">
+                <span class="badge @riskClass fs-5 px-4 py-2 mb-3">@Model.RiskLevel Risk</span>
+                <p class="text-muted small">@Model.Description</p>
+
+                @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+                {
+                    <form asp-action="UpdateRegionRisk" asp-route-id="@Model.Id" method="post">
+                        @Html.AntiForgeryToken()
+                        <div class="d-flex gap-2">
+                            <select name="riskLevel" class="form-select">
+                                @foreach (RiskLevel rl in Enum.GetValues(typeof(RiskLevel)))
+                                {
+                                    <option value="@((int)rl)" selected="@(rl == Model.RiskLevel)">@rl</option>
+                                }
+                            </select>
+                            <button type="submit" class="btn btn-pews-primary">Update</button>
+                        </div>
+                    </form>
+                }
+            </div>
+        </div>
+
+        @if (Model.WeatherData.Any())
+        {
+            var latest = Model.WeatherData.First();
+            <div class="pews-card">
+                <div class="card-header"><i class="fas fa-cloud-sun me-2 text-info"></i>Latest Weather</div>
+                <div class="card-body">
+                    <div class="row g-2 text-center">
+                        @if (latest.Temperature.HasValue)
+                        {
+                            <div class="col-6">
+                                <div class="fw-bold fs-4">@latest.Temperature.Value°C</div>
+                                <div class="text-muted small">Temperature</div>
+                            </div>
+                        }
+                        @if (latest.Humidity.HasValue)
+                        {
+                            <div class="col-6">
+                                <div class="fw-bold fs-4">@latest.Humidity.Value%</div>
+                                <div class="text-muted small">Humidity</div>
+                            </div>
+                        }
+                        @if (latest.WindSpeed.HasValue)
+                        {
+                            <div class="col-6">
+                                <div class="fw-bold fs-4">@latest.WindSpeed.Value km/h</div>
+                                <div class="text-muted small">Wind Speed</div>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(latest.Condition))
+                        {
+                            <div class="col-12">
+                                <div class="badge bg-info">@latest.Condition</div>
+                            </div>
+                        }
+                    </div>
+                    <div class="text-muted small text-center mt-2">@latest.RecordedAt.ToString("dd MMM yyyy HH:mm")</div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

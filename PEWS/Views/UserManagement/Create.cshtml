@@ -1,0 +1,78 @@
+@model PEWS.ViewModels.CreateUserViewModel
+@{
+    ViewData["Title"] = "Add Staff Account";
+    ViewData["PageTitle"] = "Add Staff Account";
+    ViewData["ActivePage"] = "Users";
+    ViewData["Breadcrumb"] = "<li class=\"breadcrumb-item\"><a href=\"/UserManagement\">Users</a></li><li class=\"breadcrumb-item active\">Add</li>";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="pews-card">
+            <div class="card-header"><i class="fas fa-user-plus me-2 text-primary"></i>Add Staff Account</div>
+            <div class="card-body">
+                <p class="text-muted small">Creates a portal account directly. Use this for Admin and Emergency Officer staff — citizens should register through the mobile app instead.</p>
+                <form asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 mb-3"></div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="FirstName" class="form-label">First Name <span class="text-danger">*</span></label>
+                            <input asp-for="FirstName" class="form-control" />
+                            <span asp-validation-for="FirstName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="LastName" class="form-label">Last Name <span class="text-danger">*</span></label>
+                            <input asp-for="LastName" class="form-control" />
+                            <span asp-validation-for="LastName" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="Email" class="form-label">Email <span class="text-danger">*</span></label>
+                            <input asp-for="Email" type="email" class="form-control" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Role" class="form-label">Role <span class="text-danger">*</span></label>
+                            <select asp-for="Role" asp-items="Model.AvailableRoles" class="form-select"></select>
+                            <span asp-validation-for="Role" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="PhoneNumber" class="form-label">Phone Number</label>
+                            <input asp-for="PhoneNumber" class="form-control" />
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Password" class="form-label">Temporary Password <span class="text-danger">*</span></label>
+                            <input asp-for="Password" type="password" class="form-control" placeholder="Min. 8 characters" />
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label asp-for="City" class="form-label">City</label>
+                            <input asp-for="City" class="form-control" />
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Region" class="form-label">Region</label>
+                            <input asp-for="Region" class="form-control" />
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-pews-primary"><i class="fas fa-floppy-disk me-2"></i>Create Account</button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

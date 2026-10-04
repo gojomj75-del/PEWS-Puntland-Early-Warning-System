@@ -1,0 +1,175 @@
+@model IEnumerable<PEWS.Models.DisasterReport>
+@using PEWS.Models.Enums
+@{
+    ViewData["Title"] = "Disaster Reports";
+    ViewData["PageTitle"] = "Disaster Reports";
+    ViewData["ActivePage"] = "Reports";
+    ViewData["PageActions"] = "<a href=\"/DisasterReports/Create\" class=\"btn btn-pews-primary\"><i class=\"fas fa-plus me-2\"></i>Add Disaster Record</a>";
+}
+
+<!-- Filter Bar -->
+<form method="get" class="pews-card mb-4">
+    <div class="card-body">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold">Search</label>
+                <input type="text" name="search" class="form-control" value="@ViewBag.Search" placeholder="Title, location..." />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">Type</label>
+                <select name="typeId" class="form-select">
+                    <option value="">All Types</option>
+                    @foreach (var t in (IEnumerable<PEWS.Models.DisasterType>)ViewBag.DisasterTypes)
+                    {
+                        <option value="@t.Id" selected="@(ViewBag.TypeId?.ToString() == t.Id.ToString())">@t.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">Severity</label>
+                <select name="severity" class="form-select">
+                    <option value="">All</option>
+                    @foreach (SeverityLevel sv in Enum.GetValues(typeof(SeverityLevel)))
+                    {
+                        <option value="@((int)sv)" selected="@(ViewBag.Severity?.ToString() == ((int)sv).ToString())">@sv</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All</option>
+                    @foreach (ReportStatus st in Enum.GetValues(typeof(ReportStatus)))
+                    {
+                        <option value="@((int)st)" selected="@(ViewBag.Status?.ToString() == ((int)st).ToString())">@st</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">Region</label>
+                <select name="regionId" class="form-select">
+                    <option value="">All Regions</option>
+                    @foreach (var r in (IEnumerable<PEWS.Models.Region>)ViewBag.Regions)
+                    {
+                        <option value="@r.Id" selected="@(ViewBag.RegionId?.ToString() == r.Id.ToString())">@r.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-pews-primary w-100"><i class="fas fa-search"></i></button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<div class="pews-card">
+    <div class="card-header">
+        <span><i class="fas fa-file-circle-exclamation me-2"></i>Reports <span class="badge bg-secondary ms-1">@ViewBag.TotalCount</span></span>
+    </div>
+    <div class="card-body p-0">
+        @if (Model.Any())
+        {
+            <div class="table-responsive">
+                <table class="table pews-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Title</th>
+                            <th>Type</th>
+                            <th>Severity</th>
+                            <th>Status</th>
+                            <th>Region</th>
+                            <th>Reported By</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var report in Model)
+                        {
+                            var sev = report.Severity switch {
+                                SeverityLevel.Low => "badge-severity-low",
+                                SeverityLevel.Medium => "badge-severity-medium",
+                                SeverityLevel.High => "badge-severity-high",
+                                _ => "badge-severity-critical"
+                            };
+                            var st = report.Status switch {
+                                ReportStatus.Pending => "badge-status-pending",
+                                ReportStatus.UnderReview => "badge-status-review",
+                                ReportStatus.Verified => "badge-status-verified",
+                                ReportStatus.Resolved => "badge-status-resolved",
+                                _ => "badge-status-rejected"
+                            };
+                            <tr>
+                                <td class="text-muted small">@report.Id</td>
+                                <td>
+                                    <a asp-action="Details" asp-route-id="@report.Id" class="fw-semibold text-decoration-none text-dark">
+                                        @report.Title
+                                    </a>
+                                    @if (report.IsVerified)
+                                    {
+                                        <i class="fas fa-circle-check text-success ms-1" title="Verified"></i>
+                                    }
+                                </td>
+                                <td>
+                                    <i class="@report.DisasterType.IconClass me-1" style="color:@report.DisasterType.Color"></i>
+                                    @report.DisasterType.Name
+                                </td>
+                                <td><span class="badge @sev">@report.Severity</span></td>
+                                <td><span class="badge @st">@report.Status</span></td>
+                                <td class="text-muted">@(report.Region?.Name ?? "—")</td>
+                                <td class="text-muted small">@report.ReportedBy?.FullName</td>
+                                <td class="text-muted small">@report.CreatedAt.ToString("dd MMM yyyy")</td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        <a asp-action="Details" asp-route-id="@report.Id"
+                                           class="btn btn-sm btn-outline-primary" title="View">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("EmergencyOfficer"))
+                                        {
+                                            <a asp-action="Edit" asp-route-id="@report.Id"
+                                               class="btn btn-sm btn-outline-secondary" title="Edit">
+                                                <i class="fas fa-pen"></i>
+                                            </a>
+                                        }
+                                        @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+                                        {
+                                            <form asp-action="Delete" asp-route-id="@report.Id" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                        data-confirm="Delete this report? This cannot be undone." title="Delete">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            @if ((int)ViewBag.TotalPages > 1)
+            {
+                <div class="d-flex justify-content-center align-items-center gap-2 py-3">
+                    @for (int p = 1; p <= (int)ViewBag.TotalPages; p++)
+                    {
+                        <a href="?page=@p&search=@ViewBag.Search&typeId=@ViewBag.TypeId&severity=@ViewBag.Severity&status=@ViewBag.Status&regionId=@ViewBag.RegionId"
+                           class="btn btn-sm @(p == (int)ViewBag.Page ? "btn-pews-primary" : "btn-outline-secondary")">@p</a>
+                    }
+                </div>
+            }
+        }
+        else
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="fas fa-folder-open fs-2 mb-3 d-block opacity-25"></i>
+                No records found matching your criteria.
+                <br /><a asp-action="Create" class="btn btn-pews-primary mt-3">Add First Record</a>
+            </div>
+        }
+    </div>
+</div>

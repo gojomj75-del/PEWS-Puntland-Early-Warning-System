@@ -1,0 +1,28 @@
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Create Account";
+}
+
+<div class="auth-card" style="max-width: 480px;">
+    <div class="auth-logo">
+        <i class="fas fa-mobile-screen-button"></i>
+    </div>
+    <h1 class="auth-title">Get the PEWS App</h1>
+    <p class="auth-subtitle">This web portal is reserved for authorized staff.</p>
+
+    <div class="alert alert-info small">
+        <i class="fas fa-circle-info me-1"></i>
+        <strong>Citizens</strong> report incidents, view alerts, and get notifications through the
+        <strong>PEWS mobile app</strong> — download it and register there to get started.
+    </div>
+
+    <div class="alert alert-warning small mb-4">
+        <i class="fas fa-user-shield me-1"></i>
+        <strong>Staff accounts</strong> (Admin / Emergency Officer) are created for you by a
+        System Administrator through User Management — they are not self-service.
+    </div>
+
+    <a asp-action="Login" class="btn btn-pews-primary w-100 py-2">
+        <i class="fas fa-arrow-left me-2"></i>Back to Sign In
+    </a>
+</div>

@@ -1,0 +1,75 @@
+@model IEnumerable<PEWS.Models.DisasterType>
+@{
+    ViewData["Title"] = "Disaster Types";
+    ViewData["PageTitle"] = "Disaster Types";
+    ViewData["ActivePage"] = "DisasterTypes";
+}
+
+<div class="pews-card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="fas fa-biohazard me-2 text-primary"></i>Disaster Types <span class="badge bg-secondary ms-1">@Model.Count()</span></span>
+        <a asp-action="Create" class="btn btn-sm btn-pews-primary"><i class="fas fa-plus me-1"></i>Add Type</a>
+    </div>
+    <div class="card-body p-0">
+        @if (Model.Any())
+        {
+            <div class="table-responsive">
+                <table class="table pews-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th>Sort</th>
+                            <th>Reports</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var type in Model)
+                        {
+                            <tr class="@(!type.IsActive ? "opacity-50" : "")">
+                                <td>
+                                    <span style="color:@type.Color" class="fw-semibold">
+                                        <i class="@type.IconClass me-2"></i>@type.Name
+                                    </span>
+                                </td>
+                                <td class="text-muted small">@(type.Description ?? "—")</td>
+                                <td class="text-muted">@type.SortOrder</td>
+                                <td class="text-muted">@type.DisasterReports.Count</td>
+                                <td>
+                                    @if (type.IsActive)
+                                    { <span class="badge bg-success">Active</span> }
+                                    else
+                                    { <span class="badge bg-secondary">Inactive</span> }
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        <a asp-action="Edit" asp-route-id="@type.Id" class="btn btn-sm btn-outline-secondary" title="Edit">
+                                            <i class="fas fa-pen"></i>
+                                        </a>
+                                        <form asp-action="Delete" asp-route-id="@type.Id" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"
+                                                    data-confirm="Delete \"@type.Name\"? This is only possible if no reports or alert categories use it.">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="fas fa-biohazard fs-2 mb-3 d-block opacity-25"></i>
+                No disaster types yet.
+                <br /><a asp-action="Create" class="btn btn-pews-primary mt-3">Add First Type</a>
+            </div>
+        }
+    </div>
+</div>

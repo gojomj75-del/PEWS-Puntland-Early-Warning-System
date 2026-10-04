@@ -1,0 +1,64 @@
+@model PEWS.ViewModels.AlertCategoryViewModel
+@{
+    ViewData["Title"] = "Add Alert Category";
+    ViewData["PageTitle"] = "Add Alert Category";
+    ViewData["ActivePage"] = "AlertCategories";
+    ViewData["Breadcrumb"] = "<li class=\"breadcrumb-item\"><a href=\"/AlertCategories\">Alert Categories</a></li><li class=\"breadcrumb-item active\">Add</li>";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="pews-card">
+            <div class="card-header"><i class="fas fa-bell me-2 text-primary"></i>Add Alert Category</div>
+            <div class="card-body">
+                <form asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Name" class="form-label">Name <span class="text-danger">*</span></label>
+                        <input asp-for="Name" class="form-control" placeholder="e.g. Flood Warning, Storm Watch" />
+                        <span asp-validation-for="Name" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label">Description</label>
+                        <textarea asp-for="Description" class="form-control" rows="2"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="DisasterTypeId" class="form-label">Linked Disaster Type</label>
+                        <select asp-for="DisasterTypeId" asp-items="Model.DisasterTypes" class="form-select">
+                            <option value="">— None —</option>
+                        </select>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label asp-for="IconClass" class="form-label">Icon Class</label>
+                            <input asp-for="IconClass" class="form-control" placeholder="fas fa-bell" />
+                            <span asp-validation-for="IconClass" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Color" class="form-label">Color</label>
+                            <input asp-for="Color" type="color" class="form-control form-control-color w-100" />
+                            <span asp-validation-for="Color" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-check mb-4">
+                        <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                        <label asp-for="IsActive" class="form-check-label">Active</label>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-pews-primary"><i class="fas fa-floppy-disk me-2"></i>Save</button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

@@ -1,0 +1,121 @@
+@model PEWS.ViewModels.Account.ProfileViewModel
+@{
+    ViewData["Title"] = "My Profile";
+    ViewData["PageTitle"] = "My Profile";
+    ViewData["ActivePage"] = "Profile";
+    ViewData["Breadcrumb"] = "<li class=\"breadcrumb-item active\">Profile</li>";
+}
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="pews-card text-center">
+            <div class="card-body py-4">
+                <div class="mx-auto mb-3" style="width:100px;height:100px;border-radius:50%;overflow:hidden;border:4px solid #e2e8f0;">
+                    @if (!string.IsNullOrEmpty(Model.ProfilePicture))
+                    {
+                        <img src="@Model.ProfilePicture" id="avatarPreview" class="w-100 h-100" style="object-fit:cover;" alt="Profile" />
+                    }
+                    else
+                    {
+                        <div class="w-100 h-100 d-flex align-items-center justify-content-center" style="background:var(--pews-primary);color:var(--pews-accent);font-size:2.5rem;font-weight:800;" id="avatarFallback">
+                            @Model.FirstName.Substring(0, 1).ToUpper()
+                        </div>
+                        <img src="" id="avatarPreview" class="w-100 h-100 d-none" style="object-fit:cover;" alt="Profile" />
+                    }
+                </div>
+                <h5 class="fw-bold mb-1">@Model.FirstName @Model.LastName</h5>
+                <p class="text-muted small mb-2">@Model.Email</p>
+                @if (!string.IsNullOrEmpty(Model.Role))
+                {
+                    <span class="badge bg-primary">@Model.Role</span>
+                }
+                <div class="mt-3 small text-muted">
+                    <div><i class="fas fa-calendar-plus me-1"></i>Joined @Model.CreatedAt.ToString("MMM dd, yyyy")</div>
+                    @if (Model.LastLoginAt.HasValue)
+                    {
+                        <div class="mt-1"><i class="fas fa-clock me-1"></i>Last login @Model.LastLoginAt.Value.ToString("MMM dd, yyyy HH:mm")</div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="pews-card mt-4">
+            <div class="card-header"><i class="fas fa-shield-halved me-2 text-primary"></i>Security</div>
+            <div class="card-body">
+                <a asp-action="ChangePassword" class="btn btn-outline-primary w-100">
+                    <i class="fas fa-key me-2"></i>Change Password
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="pews-card">
+            <div class="card-header"><i class="fas fa-pen me-2 text-primary"></i>Edit Profile</div>
+            <div class="card-body">
+                <form asp-action="Profile" method="post" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 mb-3"></div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="FirstName" class="form-label">First Name</label>
+                            <input asp-for="FirstName" class="form-control" />
+                            <span asp-validation-for="FirstName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="LastName" class="form-label">Last Name</label>
+                            <input asp-for="LastName" class="form-control" />
+                            <span asp-validation-for="LastName" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label">Email Address</label>
+                        <input asp-for="Email" class="form-control" readonly disabled />
+                        <div class="form-text">Email cannot be changed.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="PhoneNumber" class="form-label">Phone Number</label>
+                        <input asp-for="PhoneNumber" class="form-control" placeholder="+252 61 xxxxxxx" />
+                        <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Address" class="form-label">Address</label>
+                        <input asp-for="Address" class="form-control" placeholder="Street address" />
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="City" class="form-label">City</label>
+                            <input asp-for="City" class="form-control" placeholder="Garowe" />
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Region" class="form-label">Region</label>
+                            <input asp-for="Region" class="form-control" placeholder="Nugaal" />
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="ProfilePictureFile" class="form-label">Profile Picture</label>
+                        <input asp-for="ProfilePictureFile" type="file" class="form-control" accept="image/*" data-preview="avatarPreview" />
+                        <div class="form-text">Max 5MB. JPG, PNG, or GIF.</div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-pews-primary">
+                            <i class="fas fa-floppy-disk me-2"></i>Save Changes
+                        </button>
+                        <a asp-controller="Dashboard" asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

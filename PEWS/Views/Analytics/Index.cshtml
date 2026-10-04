@@ -1,0 +1,155 @@
+@{
+    ViewData["Title"] = "Analytics";
+    ViewData["PageTitle"] = "Analytics & Reports";
+    ViewData["ActivePage"] = "Analytics";
+
+    var reportsByMonth = (Dictionary<string, int>)ViewBag.ReportsByMonth;
+    var byType = (Dictionary<string, int>)ViewBag.ByType;
+    var byRegion = (Dictionary<string, int>)ViewBag.ByRegion;
+    var bySeverity = (Dictionary<string, int>)ViewBag.BySeverity;
+}
+
+<!-- Year Selector -->
+<div class="d-flex align-items-center gap-3 mb-4">
+    <span class="fw-semibold text-muted">Year:</span>
+    @foreach (int y in (IEnumerable<int>)ViewBag.Years)
+    {
+        <a href="?year=@y" class="btn btn-sm @(y == (int)ViewBag.Year ? "btn-pews-primary" : "btn-outline-secondary")">@y</a>
+    }
+</div>
+
+<!-- Summary Stats -->
+<div class="row g-4 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="stat-card border-primary">
+            <div class="stat-icon bg-primary-soft"><i class="fas fa-file-circle-exclamation"></i></div>
+            <div class="stat-value">@ViewBag.TotalReports</div>
+            <div class="stat-label">Total Reports @ViewBag.Year</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card border-warning">
+            <div class="stat-icon bg-warning-soft"><i class="fas fa-triangle-exclamation"></i></div>
+            <div class="stat-value">@ViewBag.TotalAlerts</div>
+            <div class="stat-label">Total Alerts @ViewBag.Year</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card border-success">
+            <div class="stat-icon bg-success-soft"><i class="fas fa-circle-check"></i></div>
+            <div class="stat-value">@ViewBag.VerifiedReports</div>
+            <div class="stat-label">Verified Reports</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card border-danger">
+            <div class="stat-icon bg-danger-soft"><i class="fas fa-skull-crossbones"></i></div>
+            <div class="stat-value">@ViewBag.CriticalReports</div>
+            <div class="stat-label">Critical Reports</div>
+        </div>
+    </div>
+</div>
+
+<!-- Monthly Trend -->
+<div class="row g-4 mb-4">
+    <div class="col-12">
+        <div class="pews-card">
+            <div class="card-header"><i class="fas fa-chart-line me-2 text-primary"></i>Monthly Report Trend — @ViewBag.Year</div>
+            <div class="card-body">
+                <canvas id="monthlyChart" height="80"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- By Type -->
+    <div class="col-lg-4">
+        <div class="pews-card h-100">
+            <div class="card-header"><i class="fas fa-chart-pie me-2 text-primary"></i>By Disaster Type</div>
+            <div class="card-body">
+                <canvas id="typeChart" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+    <!-- By Severity -->
+    <div class="col-lg-4">
+        <div class="pews-card h-100">
+            <div class="card-header"><i class="fas fa-chart-bar me-2 text-warning"></i>By Severity</div>
+            <div class="card-body">
+                <canvas id="sevChart" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+    <!-- By Region -->
+    <div class="col-lg-4">
+        <div class="pews-card h-100">
+            <div class="card-header"><i class="fas fa-map me-2 text-success"></i>By Region</div>
+            <div class="card-body">
+                <canvas id="regionChart" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    const monthLabels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(reportsByMonth.Keys.ToArray()));
+    const monthData   = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(reportsByMonth.Values.ToArray()));
+    const typeLabels  = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(byType.Keys.ToArray()));
+    const typeData    = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(byType.Values.ToArray()));
+    const sevLabels   = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(bySeverity.Keys.ToArray()));
+    const sevData     = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(bySeverity.Values.ToArray()));
+    const regLabels   = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(byRegion.Keys.ToArray()));
+    const regData     = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(byRegion.Values.ToArray()));
+
+    new Chart(document.getElementById('monthlyChart'), {
+        type: 'bar',
+        data: {
+            labels: monthLabels,
+            datasets: [{
+                label: 'Reports',
+                data: monthData,
+                backgroundColor: 'rgba(26,58,92,0.75)',
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true, plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#f0f4f8' } }, x: { grid: { display: false } } }
+        }
+    });
+
+    const colors = ['#0d6efd','#ffc107','#6f42c1','#dc3545','#fd7e14','#6c757d','#20c997','#795548'];
+    new Chart(document.getElementById('typeChart'), {
+        type: 'doughnut',
+        data: {
+            labels: typeLabels.length ? typeLabels : ['No Data'],
+            datasets: [{ data: typeData.length ? typeData : [1], backgroundColor: colors, borderWidth: 2, borderColor: '#fff' }]
+        },
+        options: { responsive: true, cutout: '60%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 10, font: { size: 11 } } } } }
+    });
+
+    const sevColors = { Low: '#00b894', Medium: '#fdcb6e', High: '#fd7e14', Critical: '#d63031' };
+    new Chart(document.getElementById('sevChart'), {
+        type: 'bar',
+        data: {
+            labels: sevLabels.length ? sevLabels : ['No Data'],
+            datasets: [{ data: sevData.length ? sevData : [0], backgroundColor: sevLabels.map(l => sevColors[l] || '#6c757d'), borderRadius: 6 }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+    });
+
+    new Chart(document.getElementById('regionChart'), {
+        type: 'bar',
+        data: {
+            labels: regLabels.length ? regLabels : ['No Data'],
+            datasets: [{ label: 'Reports', data: regData.length ? regData : [0], backgroundColor: '#1a3a5c', borderRadius: 6 }]
+        },
+        options: {
+            indexAxis: 'y', responsive: true, plugins: { legend: { display: false } },
+            scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+    });
+</script>
+}

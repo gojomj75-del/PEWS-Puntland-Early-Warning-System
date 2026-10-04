@@ -1,0 +1,28 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+# Flutter / Dart
+**/build/
+.dart_tool/
+.flutter-plugin-dependencies
+.packages
+*.iml
+
+# PEWSMobile (abandoned MAUI prototype, superseded by pews_mobile)
+PEWSMobile/
+
+# Claude Code project config (local only)
+.claude/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+
+# Secrets - never commit real connection strings or keys
+appsettings.Production.json
+**/appsettings.Local.json

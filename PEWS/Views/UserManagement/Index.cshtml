@@ -1,0 +1,137 @@
+@using PEWS.Models
+@{
+    ViewData["Title"] = "User Management";
+    ViewData["PageTitle"] = "User Management";
+    ViewData["ActivePage"] = "Users";
+
+    var userList = (IEnumerable<(ApplicationUser User, IList<string> Roles)>)ViewBag.UserWithRoles;
+}
+
+<form method="get" class="pews-card mb-4">
+    <div class="card-body">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <input type="text" name="search" class="form-control" value="@ViewBag.Search" placeholder="Name or email..." />
+            </div>
+            <div class="col-md-3">
+                <select name="role" class="form-select">
+                    <option value="">All Roles</option>
+                    @foreach (var r in (IEnumerable<string>)ViewBag.Roles)
+                    {
+                        <option value="@r" selected="@(ViewBag.Role == r)">@r</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="isActive" class="form-select">
+                    <option value="">All Status</option>
+                    <option value="true" selected="@(ViewBag.IsActive?.ToString() == "True")">Active</option>
+                    <option value="false" selected="@(ViewBag.IsActive?.ToString() == "False")">Inactive</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-pews-primary w-100"><i class="fas fa-search me-1"></i>Search</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<div class="pews-card">
+    <div class="card-header">
+        <span><i class="fas fa-users me-2 text-primary"></i>Users <span class="badge bg-secondary">@ViewBag.TotalCount</span></span>
+        <a asp-action="Create" class="btn btn-sm btn-pews-primary"><i class="fas fa-user-plus me-1"></i>Add Staff Account</a>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table pews-table mb-0">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Role(s)</th>
+                        <th>Region</th>
+                        <th>Status</th>
+                        <th>Joined</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var (user, roles) in userList)
+                    {
+                        <tr class="@(!user.IsActive ? "opacity-50" : "")">
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                                         style="width:34px;height:34px;background:var(--pews-primary);color:var(--pews-accent);font-size:.85rem;flex-shrink:0">
+                                        @user.FirstName.Substring(0, 1).ToUpper()
+                                    </div>
+                                    <span class="fw-semibold">@user.FullName</span>
+                                </div>
+                            </td>
+                            <td class="text-muted">@user.Email</td>
+                            <td>
+                                @foreach (var r in roles)
+                                {
+                                    var rColor = r switch {
+                                        "SuperAdmin" => "bg-danger",
+                                        "Admin" => "bg-warning text-dark",
+                                        "EmergencyOfficer" => "bg-primary",
+                                        _ => "bg-secondary"
+                                    };
+                                    <span class="badge @rColor me-1">@r</span>
+                                }
+                            </td>
+                            <td class="text-muted">@(user.Region ?? "—")</td>
+                            <td>
+                                @if (user.IsActive)
+                                { <span class="badge bg-success">Active</span> }
+                                else
+                                { <span class="badge bg-secondary">Inactive</span> }
+                            </td>
+                            <td class="text-muted small">@user.CreatedAt.ToString("dd MMM yyyy")</td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <a asp-action="Details" asp-route-id="@user.Id" class="btn btn-sm btn-outline-primary" title="Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-sm btn-outline-secondary" title="Edit">
+                                        <i class="fas fa-pen"></i>
+                                    </a>
+                                    <form asp-action="ToggleActive" asp-route-id="@user.Id" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm @(user.IsActive ? "btn-outline-warning" : "btn-outline-success")"
+                                                title="@(user.IsActive ? "Deactivate" : "Activate")"
+                                                data-confirm="@(user.IsActive ? "Deactivate this user?" : "Activate this user?")">
+                                            <i class="fas fa-@(user.IsActive ? "user-slash" : "user-check")"></i>
+                                        </button>
+                                    </form>
+                                    @if (User.IsInRole("SuperAdmin"))
+                                    {
+                                        <form asp-action="Delete" asp-route-id="@user.Id" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"
+                                                    data-confirm="Permanently delete @user.FullName? This cannot be undone.">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if ((int)ViewBag.TotalPages > 1)
+        {
+            <div class="d-flex justify-content-center gap-2 py-3">
+                @for (int p = 1; p <= (int)ViewBag.TotalPages; p++)
+                {
+                    <a href="?page=@p&search=@ViewBag.Search&role=@ViewBag.Role&isActive=@ViewBag.IsActive"
+                       class="btn btn-sm @(p == (int)ViewBag.Page ? "btn-pews-primary" : "btn-outline-secondary")">@p</a>
+                }
+            </div>
+        }
+    </div>
+</div>

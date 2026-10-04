@@ -1,0 +1,75 @@
+@model IEnumerable<PEWS.Models.AlertCategory>
+@{
+    ViewData["Title"] = "Alert Categories";
+    ViewData["PageTitle"] = "Alert Categories";
+    ViewData["ActivePage"] = "AlertCategories";
+}
+
+<div class="pews-card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="fas fa-bell me-2 text-primary"></i>Alert Categories <span class="badge bg-secondary ms-1">@Model.Count()</span></span>
+        <a asp-action="Create" class="btn btn-sm btn-pews-primary"><i class="fas fa-plus me-1"></i>Add Category</a>
+    </div>
+    <div class="card-body p-0">
+        @if (Model.Any())
+        {
+            <div class="table-responsive">
+                <table class="table pews-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Description</th>
+                            <th>Linked Disaster Type</th>
+                            <th>Alerts</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var category in Model)
+                        {
+                            <tr class="@(!category.IsActive ? "opacity-50" : "")">
+                                <td>
+                                    <span style="color:@category.Color" class="fw-semibold">
+                                        <i class="@category.IconClass me-2"></i>@category.Name
+                                    </span>
+                                </td>
+                                <td class="text-muted small">@(category.Description ?? "—")</td>
+                                <td class="text-muted">@(category.DisasterType?.Name ?? "—")</td>
+                                <td class="text-muted">@category.Alerts.Count</td>
+                                <td>
+                                    @if (category.IsActive)
+                                    { <span class="badge bg-success">Active</span> }
+                                    else
+                                    { <span class="badge bg-secondary">Inactive</span> }
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        <a asp-action="Edit" asp-route-id="@category.Id" class="btn btn-sm btn-outline-secondary" title="Edit">
+                                            <i class="fas fa-pen"></i>
+                                        </a>
+                                        <form asp-action="Delete" asp-route-id="@category.Id" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"
+                                                    data-confirm="Delete \"@category.Name\"? This is only possible if no alerts use it.">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="fas fa-bell fs-2 mb-3 d-block opacity-25"></i>
+                No alert categories yet.
+                <br /><a asp-action="Create" class="btn btn-pews-primary mt-3">Add First Category</a>
+            </div>
+        }
+    </div>
+</div>
